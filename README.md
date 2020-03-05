@@ -1,4 +1,4 @@
-# deeplearning_microexon
+# Deeplearning microexon
 Predicting microexons using a Convolutional Neural Network (CNN) model.  
 
  __human_microexon_predictor.py__ :  
