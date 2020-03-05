@@ -3,7 +3,10 @@ Predicting microexons using a Convolutional Neural Network (CNN) model.
 
  __human_microexon_predictor.py__ :  
 A command line application to predict human microexons given an exons coordinate.  
-  
+ 
+__PARAMETERS__
+
+
 __--model__  "CNN model file"  
 __--genome__ "HG19 genome file"  
 __--conservation__ "conservation big wig file hg19.100way.phastCons.bw"  
