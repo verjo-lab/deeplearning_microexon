@@ -35,7 +35,7 @@ __model_training_microexons.ipynb__:
 
 A Jupyter notebook file containing the steps to train the CNN and save the model. 
 Some steps can be modified to generate new species models.  
-This file also contains the procedure to create the synthetic mutational microexons screening.  
+This file also contains the procedure to create the synthetic mutational microexons screening (PositionScore).  
  
 
 
