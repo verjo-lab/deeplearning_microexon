@@ -14,13 +14,13 @@ PARAMETERS
 --conservation "conservation bigwig file hg19.100way.phastCons.bw"  
 --exon "A exon coordinate Ex: chr1:100020:100030:+"  
   
-```
+
   
-__OUTPUT__: (min value 0, max value 100)  
+OUTPUT: (min value 0, max value 100)  
 
   Microexon score: score > 50 are predicted  as microexons.  
 
-
+```
 
 
 __model_training_microexons.ipynb__:  
