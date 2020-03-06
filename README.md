@@ -23,6 +23,13 @@ OUTPUT: (min value 0, max value 100)
 ```
 
 
+```
+Usage:  
+
+python human_microexon_predictor.py --model model.hdf5 --genome h19.fa --conservation 
+hg19.100way.phastCons.bw --exon chr1:100020:100030:+ > result.out
+
+```
 __model_training_microexons.ipynb__:  
   
 
