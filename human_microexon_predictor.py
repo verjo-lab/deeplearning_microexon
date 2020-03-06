@@ -32,8 +32,8 @@ base_encode = {
 }
 
 
-GENOME= args.genome #'/srv/notebooks/microexon_predictor/hg19.fa' 
-CONSERVATION_FILE =  args.conservation #'/srv/notebooks/microexon_predictor/hg19.100way.phastCons.bw' 
+GENOME= args.genome #'/srv/notebooks/microexon_predictor/hg38.fa' 
+CONSERVATION_FILE =  args.conservation #'/srv/notebooks/microexon_predictor/hg38.100way.phastCons.bw' 
 
 
 def capture_values_bw(big_wig, 
