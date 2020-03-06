@@ -11,6 +11,12 @@ __--model__  "CNN model file"
 __--genome__ "HG19 genome file"  
 __--conservation__ "conservation big wig file hg19.100way.phastCons.bw"  
 __--exon__ "A exon coordinate Ex: chr1:100020:100030:+"  
+  
+  
+__OUTPUT__: (min value 0, max value 100)  
+
+  Microexon score: score > 50 are predicted  as microexons.  
+
 
 
 
