@@ -9,7 +9,7 @@ __PARAMETERS__
 
 __--model__  "CNN model file"  
 __--genome__ "HG19 genome file"  
-__--conservation__ "conservation big wig file hg19.100way.phastCons.bw"  
+__--conservation__ "conservation bigwig file hg19.100way.phastCons.bw"  
 __--exon__ "A exon coordinate Ex: chr1:100020:100030:+"  
   
   
