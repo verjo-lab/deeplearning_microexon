@@ -12,7 +12,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", help="CNN model file")
 parser.add_argument("--genome", help="HG19 genome file")
-parser.add_argument("--conservation", help="conservation big wig file hg19.100way.phastCons.bw")
+parser.add_argument("--conservation", help="conservation bigwig file hg19.100way.phastCons.bw")
 parser.add_argument("--exon", help="A exon coordinate Ex: chr1:100020:100030:+")
 
 args = parser.parse_args()
