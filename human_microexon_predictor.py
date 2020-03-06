@@ -134,7 +134,7 @@ class Microexon():
                      self.encode_dna_up[::-1].reshape(1, 100, 4),
                      self.conservation_values_up[::-1].reshape(1,100,1)] )
         
-        print (out_prob[0][0] * 100, "Microexon probability")
+        print (out_prob[0][0] * 100, "Microexon score")
         
 coord = args.exon.split(':')
 print (coord)
