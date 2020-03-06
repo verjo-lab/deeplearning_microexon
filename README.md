@@ -2,7 +2,7 @@
 Predicting microexons using a Convolutional Neural Network (CNN) model.  
 
  __human_microexon_predictor.py__ :  
-A command line application to predict human microexons given an exons coordinate.  
+A command line application to predict human microexons given an exon coordinate.  
  
 __PARAMETERS__
 
@@ -21,6 +21,8 @@ __OUTPUT__: (min value 0, max value 100)
 
 
 __model_training_microexons.ipynb__:  
+  
+
 A Jupyter notebook file containing the steps to train the CNN and save the model. 
 Some steps can be modified to generate new species models.  
 This file also contains the procedure to create the synthetic mutational microexons screening.  
