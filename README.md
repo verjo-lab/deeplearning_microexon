@@ -10,8 +10,8 @@ PARAMETERS
 
 
 --model  "CNN model file"  ( This repository contains a hdf5 file with the model used in our paper)
---genome "HG19 genome file"  
---conservation "conservation bigwig file hg19.100way.phastCons.bw"  
+--genome "HG38 genome file"  (download at http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/)
+--conservation "conservation bigwig file hg38.100way.phastCons.bw" (download at http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/)  
 --exon "A exon coordinate Ex: chr1:100020:100030:+"  
   
 
@@ -26,8 +26,8 @@ OUTPUT: (min value 0, max value 100)
 ```
 Usage:  
 
-python human_microexon_predictor.py --model model.hdf5 --genome h19.fa --conservation 
-hg19.100way.phastCons.bw --exon chr1:100020:100030:+ > result.out
+python human_microexon_predictor.py --model model.hdf5 --genome hg38.fa --conservation 
+hg38.100way.phastCons.bw --exon chr1:100020:100030:+ > result.out
 
 ```
 __model_training_microexons.ipynb__:  
