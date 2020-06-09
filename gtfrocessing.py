@@ -4,7 +4,7 @@ from tqdm import tqdm
 import gtfparse
 import matplotlib.pyplot as plt
 
-__version__ = 0.21
+__version__ = 0.22
 
 
 class GTFProcessing():
@@ -77,7 +77,7 @@ class GTFProcessing():
         '''Save a bed_file using a gtf as reference and returns the bed_file_name string'''
         
         
-        print gtf_df[['chr', 'start', 'end', fourth_position_feature, fifth_position_feature ,'strand']].head()
+        print (gtf_df[['chr', 'start', 'end', fourth_position_feature, fifth_position_feature ,'strand']].head())
         
         gtf_df[['chr', 'start', 'end', fourth_position_feature, fifth_position_feature ,'strand']].to_csv(bed_file_name,
                                                                                 sep='\t',
@@ -92,7 +92,7 @@ class GTFProcessing():
         '''Save a bed_file using a gtf as reference and returns df with a bed6 format'''
         
         
-        print gtf_df[['chr', 'start', 'end', fourth_position_feature, fifth_position_feature ,'strand']].head()
+        print (gtf_df[['chr', 'start', 'end', fourth_position_feature, fifth_position_feature ,'strand']].head())
         
         
         return gtf_df[['chr', 'start', 'end', fourth_position_feature, fifth_position_feature ,'strand']]
@@ -106,8 +106,8 @@ class GTFProcessing():
         '''
         x_axis_feature = GTFProcessing.get_first_exon_df(gtf_df).groupby(feature).count()['start']
         plt.bar(range(0,  x_axis_feature.values.shape[0]) , x_axis_feature.values) 
-        print x_axis_feature.keys()
-        print x_axis_feature.values
+        print (x_axis_feature.keys())
+        print (x_axis_feature.values)
         plt.xticks(range(0,  x_axis_feature.values.shape[0]), (x_axis_feature.keys().values),  rotation='vertical' ) 
         plt.title(feature)
         plt.show()
