@@ -1,4 +1,3 @@
-__author__ = 'lucas'
 # -*- coding: utf-8 -*-
 import sys
 import pandas as pd
@@ -13,7 +12,7 @@ def get_conservation_hash(size_sequence, flanks_regions):
     for f_i in flanks_regions[['chr', 'start', 'end', 'short_id']].values:
 
         for p in ['up', 'down']:
-            f = f_i[:]  # copiando objeto
+            f = f_i[:]
             indice = map(int, f[-1].split('_')[1:])
             if p =='up':
 
@@ -40,33 +39,23 @@ def get_conservation_hash(size_sequence, flanks_regions):
 
 
     flank_list_str = '\n'.join(creating_flank_regions)
-    print flank_list_str
-
-
-
-    print 'sorting...flank file'
+    print(flank_list_str)
+    print('sorting... flanks file')
     flank_bedtools = BedTool(flank_list_str, from_string=True).sort()
     flank_bedtools.saveas('/home/lucas/PycharmProjects/MEGS_introns/fixando_consevation/flank.bed')
 
-    print 'longo...intersect....'
+    print('long... intersecting...')
     cmd = 'bedmap --skip-unmapped --echo  --echo-map /work/users/vinicius/xto/hg38.bed.graph  /home/lucas/PycharmProjects/MEGS_introns/fixando_consevation/flank.bed > /home/lucas/PycharmProjects/MEGS_introns/fixando_consevation/flanks_conser_bedtools.bed'
     os.system(cmd)
 
-    # ['chr1',
-    #  '940918',
-    #  '940922',  <========== essa ponta com um bloco esta passando e entrando  do exon (colocar limite)
-    #  '0',
-    #  'chr1',
-    #  '940920',
-    #  '941170',
-
-    print 'finished ...intersect....'
+    print('finished ...intersect....')
     conser_bed = '/home/lucas/PycharmProjects/MEGS_introns/fixando_consevation/flanks_conser_bedtools.bed'
     separating_multiple_hits=[]
     file_creating_out_fixed_multiple = '/home/lucas/PycharmProjects/MEGS_introns/fixando_consevation/flanks_conser_bedtools_fixed.bed'
     creating_out_fixed_multiple = open(file_creating_out_fixed_multiple, 'w')
     conser_to_sep = open(conser_bed).read().split('\n')
-    print 'creating_out_fixed_multiple...'
+
+    print('creating_out_fixed_multiple...')
     for l_c in tqdm(conser_to_sep):
         if ";" in l_c:
             l_c_splited = l_c.replace('|', ';').split(';')
@@ -75,10 +64,10 @@ def get_conservation_hash(size_sequence, flanks_regions):
         else:
             separating_multiple_hits.append(l_c.replace('|', '\t'))
 
-    creating_out_fixed_multiple.write('\n'.join(separating_multiple_hits)) #  PROBLEMA NA RAM AQUI usar bedpos?
+    creating_out_fixed_multiple.write('\n'.join(separating_multiple_hits))
     creating_out_fixed_multiple.close()
     file_conser = pd.read_table(file_creating_out_fixed_multiple, sep='\t', header=None)
-    print file_conser
+    print(file_conser)
 
     #Preapring to bedtools intersect
 
@@ -90,7 +79,7 @@ def get_conservation_hash(size_sequence, flanks_regions):
             size = end - start
             conser = float(line[3])
             key_exon = line[-1].strip('_up|_down')
-            # print key_exon
+            #( rint key_exon)
             if '_up' in line[-1]:
                 out_temp_unpacked = [
                                         '\t'.join(
@@ -101,9 +90,8 @@ def get_conservation_hash(size_sequence, flanks_regions):
                                                  ]) for n_con in range(size)
 
                                              ]
-                #print len (out_temp_unpacked)
+                #print(len (out_temp_unpacked))
                 bedtools_preparing_list.append('\n'.join(out_temp_unpacked))
-                 # adicionando e desempacotando
             else:
                 out_temp_unpacked = [
                     '\t'.join(
@@ -113,22 +101,21 @@ def get_conservation_hash(size_sequence, flanks_regions):
                              str(round(conser, ndigits=1))
                              ]) for n_con in range(size)
                     ]
-                #print len(out_temp_unpacked)
+                #print(len(out_temp_unpacked))
                 bedtools_preparing_list.append('\n'.join(out_temp_unpacked))
-                # adicionando e desempacotando
 
 
-    print 'tamanho bedtools_preparing_list: ', len(bedtools_preparing_list)
-    print bedtools_preparing_list[0:2]
+    print('tamanho bedtools_preparing_list: ', len(bedtools_preparing_list))
+    print(bedtools_preparing_list[0:2])
 
     map_unpacked = BedTool('\n'.join([o_line for b_line in bedtools_preparing_list for o_line in b_line.split('\n')]), from_string=True).sort()
     map_unpacked.saveas('/work/users/lucassilva/temp/map_unpacked.bed')
     intersected_map = map_unpacked.intersect('/home/lucas/PycharmProjects/MEGS_introns/fixando_consevation/flank.bed', wb=True, wa=True)
-    print 'len intersected..', len(intersected_map)
+    print('len intersected..', len(intersected_map))
 
     map_unpacked_intersected = '/work/users/lucassilva/temp/final_flanks_conser_bedtools_fixed.bed'
     intersected_map.saveas(map_unpacked_intersected)
-    print 'removing_duplicates....'
+    print('removing_duplicates....')
     map_unpacked_file_conser = pd.read_table(map_unpacked_intersected, sep='\t', header=None).drop_duplicates()
 
     hash_conser = {}
@@ -147,28 +134,13 @@ def get_conservation_hash(size_sequence, flanks_regions):
         hash_conser_out[k] = [
             [u[3] for u in v[:size_sequence]],
             [d[3] for d in v[size_sequence:]]
-
-                            ] # erro
-        # if len(v) == size_sequence*2:
-        #     print 'diferente do tamanho desehado!'
-        #     print v[size_sequence:]
-        #     print k
-        #     print len(v)
-        #     print len(v[:size_sequence])
-        #     print len(v[size_sequence:])
-
+        ]
 
 
     return hash_conser_out
 
 def main():
     pass
-
-    #[exit() for check_size in hash_conser.values() if len(check_size)  != 200]
-        # if len(hash_conser) >30:
-        #     print hash_conser
-        #     print [len(v) for v in  hash_conser.values()]
-        #     exit()
 
 if __name__ == '__main__':
     sys.exit(main())

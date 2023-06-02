@@ -79,10 +79,7 @@ class Microexon():
         self.set_values()
         self.encode_dna_up = self.encoding_dna_sequence(self.seq_values_up)
         self.encode_dna_down = self.encoding_dna_sequence(self.seq_values_down) 
-        
-        
-
-        
+                
     def set_values(self):
         '''
 
@@ -108,16 +105,8 @@ class Microexon():
                   self.flank_down_limit_start,
                   self.flank_down_limit_end)
         
-        
-#         print (map(len, [self.conservation_values_up,
-#                          self.conservation_values_down,
-#                         self.seq_values_up,
-#                         self.seq_values_down,]))
-        
     def encoding_dna_sequence(self, x):
         return np.array([base_encode[x_nucleo.upper()] for x_nucleo in x ])
-    
-    
     
     def prediction(self):
         '''I need to flip strands at this point'''
