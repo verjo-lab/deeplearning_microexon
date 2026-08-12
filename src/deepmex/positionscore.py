@@ -142,11 +142,13 @@ def plot_position_scores(
     panel_label: str | None = None,
     subtitle: str | None = None,
 ) -> "Figure":
-    """Draw the Fig. 7A panel and return the matplotlib figure."""
-    import matplotlib  # noqa: PLC0415
+    """Draw the Fig. 7A panel and return the matplotlib figure.
 
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt  # noqa: PLC0415
+    The figure is built without pyplot, so scoring many microexons in a loop
+    does not pile up figures in the global pyplot registry.
+    """
+    import matplotlib  # noqa: PLC0415
+    from matplotlib.figure import Figure  # noqa: PLC0415
     from matplotlib.patches import Rectangle  # noqa: PLC0415
 
     plot_matrix = build_plot_matrix(matrix, base_order=base_order, gap=gap)
@@ -155,7 +157,7 @@ def plot_position_scores(
     colormap = matplotlib.colormaps["RdBu_r"].copy()
     colormap.set_bad("white")
 
-    figure = plt.figure(figsize=(14, 4.4))
+    figure = Figure(figsize=(14, 4.4))
     heat_axes = figure.add_axes((0.08, 0.42, 0.80, 0.36))
     gene_axes = figure.add_axes((0.08, 0.16, 0.80, 0.16))
     bar_axes = figure.add_axes((0.91, 0.42, 0.015, 0.36))
