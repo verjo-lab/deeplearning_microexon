@@ -36,6 +36,51 @@ python human_microexon_predictor.py --model model.hdf5 --genome hg38.fa --conser
 hg38.100way.phastCons.bw --exon chr1:100020:100030:+ > result.out
 ```
 
+## PositionScore: mutational screening figure
+
+`positionscore.py` runs the synthetic mutational screening of the training
+notebook from the command line and draws the heatmap used in the paper
+(Fig. 7A): every base of the two 100 nt flanks is replaced by each of the four
+nucleotides, the microexon is re-scored, and the delta (mutant - wild type) is
+plotted as a 4 x 200 heatmap.
+
+### Parameters
+
+ - exon (required): the microexon coordinate, i.e.: chrX:31126642:31126673:+
+ - model, genome, conservation: the same files used by `deepmex.py`
+ - gene: gene name printed in the title, i.e.: DMD
+ - output: output figure, the extension picks the format (png, pdf, svg, tif). Default: positionscore.png
+ - tsv: also write the per position / per base scores to a tab separated file
+ - vmax: color scale limit, the scale runs from -vmax to +vmax. Default: 0.015
+ - gap: blank columns drawn between the two flanks. Default: 4
+ - base-order: heatmap row order, top to bottom. Default: TGAC
+ - panel-label: panel letter drawn on the top left corner, i.e.: A
+ - batch-size: variants scored per model call. Default: 256
+ - dpi: output resolution. Default: 300
+ - demo: render the layout with synthetic scores, without model or reference files
+
+### Sample command
+
+```
+python src/positionscore.py --model src/saved_model.hdf5 --genome src/data/hg38.fa \
+  --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:+ \
+  --gene DMD --panel-label A --output DMD_positionscore.png --tsv DMD_positionscore.tsv
+```
+
+To check the figure layout without downloading the reference files (only numpy
+and matplotlib are needed):
+
+```
+python src/positionscore.py --exon chrX:31126642:31126673:+ --gene DMD --demo --output demo.png
+```
+
+The screening scores 800 variants (200 positions x 4 bases) in batches, so a
+single microexon takes one model load plus a few seconds of prediction.
+
+Minus strand exons are drawn in transcript orientation (column 0 is always
+-100 relative to the exon), following the same flank handling `deepmex.py`
+applies when it scores a minus strand microexon.
+
 ## Other files available
 
 ### src/training_notebooks/model_training_microexons.ipynb:  
@@ -48,5 +93,3 @@ Some steps can be modified to generate new species models. This file also contai
 ## Next Releases:
 
   -Generate a conda package.  
-
-  -Include the mutational screening in the command line tool.

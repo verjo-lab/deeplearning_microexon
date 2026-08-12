@@ -4,3 +4,12 @@ download-data:
 
 run-example:
 	python src/deepmex.py --model src/saved_model.hdf5 --genome src/data/hg38.fa --conservation src/data/hg38_cons.bw --exon chr1:100020:100030:+
+
+run-positionscore-example:
+	python src/positionscore.py --model src/saved_model.hdf5 --genome src/data/hg38.fa --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:+ --gene DMD --panel-label A --output DMD_positionscore.png
+
+positionscore-demo:
+	python src/positionscore.py --exon chrX:31126642:31126673:+ --gene DMD --demo --panel-label A --output demo_positionscore.png
+
+test:
+	python tests/test_positionscore.py
