@@ -1,0 +1,64 @@
+[project]
+name = "deepmex"
+version = "0.2.0"
+description = "Predicting human microexons with a convolutional neural network"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10",
+    "numpy>=2.2",
+]
+
+[project.optional-dependencies]
+# Reading the reference genome and the conservation track.
+genome = [
+    "pybedtools>=0.12",
+    "pyBigWig>=0.3.24",
+]
+# Running the CNN. TensorFlow has no wheels for CPython 3.15 yet, so this
+# extra only resolves on 3.13/3.14: uv sync --extra model --python 3.13
+model = [
+    "h5py>=3.14",
+    "keras>=3.11",
+    "tensorflow>=2.20",
+]
+# Training set preparation from a GTF annotation.
+gtf = [
+    "gtfparse>=2.8",
+    "pandas>=2.3",
+    "tqdm>=4.67",
+]
+
+[project.scripts]
+deepmex = "deepmex.cli:main"
+positionscore = "deepmex.positionscore:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.16",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/deepmex"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+src = ["src", "tests"]
+extend-exclude = ["src/training_notebooks"]  # research notebooks, kept as published
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "PTH"]
+ignore = ["PLR0913", "PLR0917"]  # the plotting helpers do take many arguments
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PLR2004"]  # magic numbers are the point of the assertions

@@ -178,3 +178,7 @@ pyrightconfig.json
 *.fa
 *.fa.fai
 *.bw
+# PositionScore output
+positionscore.png
+*_positionscore.png
+*_positionscore.tsv
