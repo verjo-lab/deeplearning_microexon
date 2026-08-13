@@ -188,6 +188,14 @@ The package lives in `src/deepmex/`:
 
 ## Other files available
 
+### src/training_notebooks/predictor.ipynb
+
+Applies the model to one coordinate, reading the genome and the conservation
+track from local hg38 files. Verified to run end to end and to report 0.761 for
+the DMD microexon of Fig. 7A, the same value the command line tools give. It
+needs `bedtools` on your PATH, plus the hg38 fasta and bigwig its first cells
+download.
+
 ### src/training_notebooks/model_training_microexons.ipynb
 
 A Jupyter notebook file containing the steps to train the CNN and save the model.
