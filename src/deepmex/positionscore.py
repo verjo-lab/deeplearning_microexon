@@ -31,6 +31,7 @@ from deepmex.core import (
     FLANK_SIZE,
     CNNModel,
     Microexon,
+    ModelUnavailableError,
     ReferenceFiles,
     Strand,
     load_cnn_model,
@@ -373,6 +374,23 @@ def parse_groups(values: list[str]) -> dict[str, list[str]]:
     return groups
 
 
+def load_knockdown(parser: argparse.ArgumentParser, args: argparse.Namespace) -> "KnockdownEvent | None":
+    """Read panel B from the options, or return None when it was not asked for."""
+    if not (args.knockdown or args.event or args.group):
+        return None
+    missing = [name for name in ("knockdown", "event", "group") if not getattr(args, name)]
+    if missing:
+        parser.error("--{} required to draw panel B".format(", --".join(missing)))
+
+    from deepmex.knockdown import read_vast_tools  # noqa: PLC0415
+
+    try:
+        return read_vast_tools(args.knockdown, args.event, parse_groups(args.group))
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+    return None
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -401,7 +419,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         if not args.quiet:
             print(f"loading model {args.model}", file=sys.stderr)
-        model = load_cnn_model(args.model)
+        try:
+            model = load_cnn_model(args.model)
+        except ModelUnavailableError as error:
+            print(error, file=sys.stderr)
+            return 1
         microexon = Microexon.from_reference(chrom, start, end, strand, references)
         matrix, wild_type_score = position_score_matrix(
             microexon, model, batch_size=args.batch_size, verbose=not args.quiet
@@ -410,17 +432,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     matrix = to_transcript_orientation(matrix, strand)
 
-    knockdown = None
-    if args.knockdown or args.event or args.group:
-        missing = [name for name in ("knockdown", "event", "group") if not getattr(args, name)]
-        if missing:
-            parser.error("--{} required to draw panel B".format(", --".join(missing)))
-        from deepmex.knockdown import read_vast_tools  # noqa: PLC0415
-
-        try:
-            knockdown = read_vast_tools(args.knockdown, args.event, parse_groups(args.group))
-        except (ValueError, OSError) as error:
-            parser.error(str(error))
+    knockdown = load_knockdown(parser, args)
 
     if args.tsv:
         write_tsv(args.tsv, matrix, chrom, start, end, strand)

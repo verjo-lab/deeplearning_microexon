@@ -7,6 +7,12 @@ requires-python = ">=3.13"
 dependencies = [
     "matplotlib>=3.10",
     "numpy>=2.2",
+    # Scoring is the point of the tool, so the backend is not optional. It has
+    # no CPython 3.15 wheels yet; the marker keeps `uv sync` resolvable there,
+    # and load_cnn_model then says what to do.
+    "h5py>=3.14; python_version < '3.15'",
+    "keras>=3.11; python_version < '3.15'",
+    "tensorflow>=2.20; python_version < '3.15'",
 ]
 
 [project.optional-dependencies]
@@ -14,13 +20,6 @@ dependencies = [
 genome = [
     "pybedtools>=0.12",
     "pyBigWig>=0.3.24",
-]
-# Running the CNN. TensorFlow has no wheels for CPython 3.15 yet, so this
-# extra only resolves on 3.13/3.14: uv sync --extra model --python 3.13
-model = [
-    "h5py>=3.14",
-    "keras>=3.11",
-    "tensorflow>=2.20",
 ]
 # Training set preparation from a GTF annotation.
 gtf = [

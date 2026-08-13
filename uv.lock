@@ -234,8 +234,11 @@ name = "deepmex"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
+    { name = "h5py", marker = "python_full_version < '3.15'" },
+    { name = "keras", marker = "python_full_version < '3.15'" },
     { name = "matplotlib" },
     { name = "numpy" },
+    { name = "tensorflow", marker = "python_full_version < '3.15'" },
 ]
 
 [package.optional-dependencies]
@@ -248,11 +251,6 @@ gtf = [
     { name = "pandas" },
     { name = "tqdm" },
 ]
-model = [
-    { name = "h5py" },
-    { name = "keras" },
-    { name = "tensorflow" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -263,17 +261,17 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "gtfparse", marker = "extra == 'gtf'", specifier = ">=2.8" },
-    { name = "h5py", marker = "extra == 'model'", specifier = ">=3.14" },
-    { name = "keras", marker = "extra == 'model'", specifier = ">=3.11" },
+    { name = "h5py", marker = "python_full_version < '3.15'", specifier = ">=3.14" },
+    { name = "keras", marker = "python_full_version < '3.15'", specifier = ">=3.11" },
     { name = "matplotlib", specifier = ">=3.10" },
     { name = "numpy", specifier = ">=2.2" },
     { name = "pandas", marker = "extra == 'gtf'", specifier = ">=2.3" },
     { name = "pybedtools", marker = "extra == 'genome'", specifier = ">=0.12" },
     { name = "pybigwig", marker = "extra == 'genome'", specifier = ">=0.3.24" },
-    { name = "tensorflow", marker = "extra == 'model'", specifier = ">=2.20" },
+    { name = "tensorflow", marker = "python_full_version < '3.15'", specifier = ">=2.20" },
     { name = "tqdm", marker = "extra == 'gtf'", specifier = ">=4.67" },
 ]
-provides-extras = ["genome", "model", "gtf"]
+provides-extras = ["genome", "gtf"]
 
 [package.metadata.requires-dev]
 dev = [

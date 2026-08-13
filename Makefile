@@ -1,12 +1,17 @@
-.PHONY: install install-model download-data run-example run-positionscore-example figure-example positionscore-demo test lint format
+.PHONY: install install-local-reference install-3.15 download-data run-example run-positionscore-example figure-example positionscore-demo test lint format
 
-# Demo + tests environment (Python 3.15, see .python-version).
+# Everything, including the model (Python 3.13, see .python-version).
 install:
 	uv sync
 
-# Inference environment: TensorFlow has no CPython 3.15 wheels yet.
-install-model:
-	uv sync --extra model --extra genome --python 3.13
+# Reading the flanks from local files instead of the UCSC API needs bedtools.
+install-local-reference:
+	uv sync --extra genome
+
+# TensorFlow has no CPython 3.15 wheels yet, so the model does not run there;
+# the demo, the tests and the linter do.
+install-3.15:
+	uv sync --python 3.15
 
 download-data:
 	curl -o src/data/hg38.phastCons100way.bw http://hgdownload.cse.ucsc.edu/goldenpath/hg38/phastCons100way/hg38_cons.bw

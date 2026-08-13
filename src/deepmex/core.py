@@ -32,6 +32,10 @@ BASE_ENCODING: dict[str, tuple[int, int, int, int]] = {
 }
 
 
+class ModelUnavailableError(RuntimeError):
+    """The CNN cannot be loaded because its backend is not installed."""
+
+
 class CNNModel(Protocol):
     """The slice of the Keras model API used here."""
 
@@ -62,10 +66,18 @@ def load_cnn_model(model_file: str | Path, compile_model: bool = False) -> CNNMo
     (``lr=...``) no longer deserializes on Keras 3. Scoring does not need the
     optimizer, so the model is loaded uncompiled unless asked otherwise.
     """
-    import tensorflow as tf  # noqa: PLC0415  (optional, heavy import)
+    try:
+        import tensorflow as tf  # noqa: PLC0415  (heavy import, only needed to score)
 
-    tf.get_logger().setLevel("ERROR")
-    from keras.models import load_model  # noqa: PLC0415
+        tf.get_logger().setLevel("ERROR")
+        from keras.models import load_model  # noqa: PLC0415
+    except ImportError as error:
+        raise ModelUnavailableError(
+            f"{error.name} is not installed in this environment.\n"
+            "TensorFlow has no CPython 3.15 wheels yet, so the model runs on 3.13:\n"
+            "    uv sync --python 3.13\n"
+            "Everything that does not score (--demo, the tests) runs on either."
+        ) from error
 
     return load_model(str(model_file), compile=compile_model)
 

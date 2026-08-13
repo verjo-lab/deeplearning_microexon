@@ -5,7 +5,13 @@ import shutil
 import sys
 from collections.abc import Sequence
 
-from deepmex.core import Microexon, ReferenceFiles, load_cnn_model, parse_exon
+from deepmex.core import (
+    Microexon,
+    ModelUnavailableError,
+    ReferenceFiles,
+    load_cnn_model,
+    parse_exon,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,7 +40,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (ValueError, FileNotFoundError) as error:
         parser.error(str(error))
 
-    model = load_cnn_model(args.model)
+    try:
+        model = load_cnn_model(args.model)
+    except ModelUnavailableError as error:
+        print(error, file=sys.stderr)
+        return 1
     microexon = Microexon.from_reference(chrom, start, end, strand, references)
     score = microexon.predict(model)
 

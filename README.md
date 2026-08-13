@@ -3,26 +3,26 @@ Predicting microexons using a Convolutional Neural Network (CNN) model.
 
 ## Requirements
 
-Python 3.13 or newer (the project is pinned to 3.15 in `.python-version`) and
-[uv](https://docs.astral.sh/uv/). Make sure `bedtools` is installed and on your
-PATH.
+Python 3.13 or newer and [uv](https://docs.astral.sh/uv/):
 
 ```
-uv sync                    # demo + tests (Python 3.15)
+uv sync
 ```
 
-TensorFlow does not publish CPython 3.15 wheels yet, so the environment that
-actually runs the CNN is built on Python 3.13:
+That is the whole setup. `deepmex-figure` reads what it needs from the UCSC
+API, so neither the reference files nor `bedtools` are required.
 
-```
-uv sync --extra model --extra genome --python 3.13    # or: make install-model
-```
+The project is pinned to Python 3.13 in `.python-version` because TensorFlow
+does not publish CPython 3.15 wheels yet. The code runs on 3.15 (`make
+install-3.15`) and so do the demo, the tests and the linter, but scoring a
+microexon there raises an error telling you to drop to 3.13.
 
-Optional extras: `model` (tensorflow, keras), `genome` (pyBigWig, pybedtools),
-`gtf` (pandas, gtfparse, tqdm, for the training set preparation).
+Optional extras:
 
-Use `make download-data` to download the hg38 fasta and bigwig files (if you
-already have the files, move them to `src/data/`).
+ - `genome` (pyBigWig, pybedtools): read the flanks from local files instead of
+   the API. Needs `bedtools` on your PATH, and `make download-data` to fetch the
+   hg38 fasta and bigwig into `src/data/`
+ - `gtf` (pandas, gtfparse, tqdm): the training set preparation
 
 ## deepmex: predicting a microexon
 

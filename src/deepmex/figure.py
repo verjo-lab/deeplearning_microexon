@@ -12,11 +12,19 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from deepmex.core import Microexon, ReferenceFiles, Strand, load_cnn_model, parse_coordinate
+from deepmex.core import (
+    Microexon,
+    ModelUnavailableError,
+    ReferenceFiles,
+    Strand,
+    load_cnn_model,
+    parse_coordinate,
+)
 from deepmex.impact import format_top, impact_table, write_impact_tsv
 from deepmex.positionscore import (
     DEFAULT_VMAX,
     FIGURE_BASE_ORDER,
+    load_knockdown,
     plot_figure,
     position_score_matrix,
     to_transcript_orientation,
@@ -139,23 +147,6 @@ def load_microexon(
     return microexon
 
 
-def load_knockdown(parser: argparse.ArgumentParser, args: argparse.Namespace):
-    if not (args.knockdown or args.event or args.group):
-        return None
-    missing = [name for name in ("knockdown", "event", "group") if not getattr(args, name)]
-    if missing:
-        parser.error("--{} required to draw panel B".format(", --".join(missing)))
-
-    from deepmex.knockdown import read_vast_tools  # noqa: PLC0415
-    from deepmex.positionscore import parse_groups  # noqa: PLC0415
-
-    try:
-        return read_vast_tools(args.knockdown, args.event, parse_groups(args.group))
-    except (ValueError, OSError) as error:
-        parser.error(str(error))
-    return None
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -177,7 +168,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error(f"model file not found: {args.model}")
     if not args.quiet:
         print(f"loading model {args.model}", file=sys.stderr)
-    model = load_cnn_model(args.model)
+    try:
+        model = load_cnn_model(args.model)
+    except ModelUnavailableError as error:
+        print(error, file=sys.stderr)
+        return 1
 
     matrix, wild_type_score = position_score_matrix(
         microexon, model, batch_size=args.batch_size, verbose=not args.quiet
