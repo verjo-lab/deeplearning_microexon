@@ -40,6 +40,8 @@ from deepmex.core import (
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
+    from deepmex.knockdown import KnockdownEvent
+
 # Mutated bases, in the same order used by the training notebook.
 MUTATION_BASES = ["A", "C", "T", "G"]
 MUTATION_VECTORS = np.array(
@@ -137,7 +139,8 @@ def build_plot_matrix(
     return np.hstack([heat[:, :FLANK_SIZE], blank, heat[:, FLANK_SIZE:]])
 
 
-def plot_position_scores(
+def draw_position_scores(
+    figure: "Figure",
     matrix: np.ndarray,
     chrom: str,
     start: int,
@@ -149,15 +152,20 @@ def plot_position_scores(
     base_order: str = FIGURE_BASE_ORDER,
     panel_label: str | None = None,
     subtitle: str | None = None,
-) -> "Figure":
-    """Draw the Fig. 7A panel and return the matplotlib figure.
+    band: tuple[float, float] = (0.0, 1.0),
+) -> None:
+    """Draw panel A into ``figure``, inside the vertical ``band`` (y0, height).
 
-    The figure is built without pyplot, so scoring many microexons in a loop
-    does not pile up figures in the global pyplot registry.
+    ``band`` lets the panel be stacked with others in a composite figure; it
+    defaults to the whole figure.
     """
     import matplotlib  # noqa: PLC0415
-    from matplotlib.figure import Figure  # noqa: PLC0415
     from matplotlib.patches import Rectangle  # noqa: PLC0415
+
+    band_y0, band_height = band
+
+    def place(x: float, y: float, width: float, tall: float) -> tuple[float, float, float, float]:
+        return (x, band_y0 + y * band_height, width, tall * band_height)
 
     plot_matrix = build_plot_matrix(matrix, base_order=base_order, gap=gap)
     n_columns = plot_matrix.shape[1]
@@ -165,10 +173,9 @@ def plot_position_scores(
     colormap = matplotlib.colormaps["RdBu_r"].copy()
     colormap.set_bad("white")
 
-    figure = Figure(figsize=(14, 4.4))
-    heat_axes = figure.add_axes((0.08, 0.42, 0.80, 0.36))
-    gene_axes = figure.add_axes((0.08, 0.16, 0.80, 0.16))
-    bar_axes = figure.add_axes((0.91, 0.42, 0.015, 0.36))
+    heat_axes = figure.add_axes(place(0.08, 0.42, 0.80, 0.36))
+    gene_axes = figure.add_axes(place(0.08, 0.16, 0.80, 0.16))
+    bar_axes = figure.add_axes(place(0.91, 0.42, 0.015, 0.36))
 
     image = heat_axes.imshow(
         plot_matrix, aspect="auto", cmap=colormap, vmin=-vmax, vmax=vmax, interpolation="nearest"
@@ -212,10 +219,59 @@ def plot_position_scores(
     heat_axes.set_title(title, fontsize=19, pad=14)
 
     if subtitle:
-        figure.text(0.5, 0.03, subtitle, ha="center", fontsize=10, color="#B00020")
+        figure.text(0.5, band_y0 + 0.03 * band_height, subtitle, ha="center", fontsize=10, color="#B00020")
     if panel_label:
-        figure.text(0.01, 0.93, panel_label, fontsize=26, fontweight="bold")
+        figure.text(0.01, band_y0 + 0.93 * band_height, panel_label, fontsize=26, fontweight="bold")
 
+
+def plot_figure(
+    matrix: np.ndarray,
+    chrom: str,
+    start: int,
+    end: int,
+    strand: Strand,
+    knockdown: "KnockdownEvent | None" = None,
+    knockdown_title: str | None = None,
+    **panel_a: object,
+) -> "Figure":
+    """Compose the published figure: panel A alone, or panels A and B stacked."""
+    from matplotlib.figure import Figure  # noqa: PLC0415
+
+    if knockdown is None:
+        figure = Figure(figsize=(14, 4.4))
+        draw_position_scores(figure, matrix, chrom, start, end, strand, **panel_a)
+        return figure
+
+    from deepmex.knockdown import draw_knockdown  # noqa: PLC0415
+
+    height_a, height_b = 4.4, 5.2
+    figure = Figure(figsize=(14, height_a + height_b))
+    fraction_b = height_b / (height_a + height_b)
+    if not panel_a.get("panel_label"):
+        panel_a["panel_label"] = "A"
+    draw_position_scores(
+        figure, matrix, chrom, start, end, strand, band=(fraction_b, 1 - fraction_b), **panel_a
+    )
+    draw_knockdown(
+        figure,
+        knockdown,
+        band=(0.0, fraction_b),
+        title=knockdown_title,
+        panel_label="B",
+    )
+    return figure
+
+
+def plot_position_scores(*args, **kwargs) -> "Figure":
+    """Draw panel A alone and return the figure.
+
+    Built without pyplot, so scoring many microexons in a loop does not pile
+    up figures in the global pyplot registry.
+    """
+    from matplotlib.figure import Figure  # noqa: PLC0415
+
+    figure = Figure(figsize=(14, 4.4))
+    draw_position_scores(figure, *args, **kwargs)
     return figure
 
 
@@ -288,7 +344,33 @@ def build_parser() -> argparse.ArgumentParser:
         "--demo", action="store_true", help="render synthetic scores instead of running the model"
     )
     parser.add_argument("--quiet", action="store_true", help="do not report progress")
+
+    panel_b = parser.add_argument_group("panel B: inclusion under a knock-down")
+    panel_b.add_argument("--knockdown", type=Path, help="vast-tools INCLUSION_LEVELS_FULL table")
+    panel_b.add_argument("--event", help="vast-tools event id, i.e. HsaEX0019952")
+    panel_b.add_argument(
+        "--group",
+        action="append",
+        metavar="NAME=SAMPLE,SAMPLE",
+        help="a group of samples, i.e. --group shRNA=s1,s2 --group Control=c1,c2 "
+        "(give it twice: the treated group first)",
+    )
+    panel_b.add_argument("--knockdown-title", help='title of panel B, i.e. "PTBP1 knock-down in HepG2 cells"')
     return parser
+
+
+def parse_groups(values: list[str]) -> dict[str, list[str]]:
+    """Parse the ``--group NAME=SAMPLE,SAMPLE`` options, keeping their order."""
+    groups: dict[str, list[str]] = {}
+    for value in values:
+        if "=" not in value:
+            raise ValueError(f"--group must look like NAME=SAMPLE,SAMPLE, got {value!r}")
+        name, samples = value.split("=", 1)
+        parsed = [sample.strip() for sample in samples.split(",") if sample.strip()]
+        if not parsed:
+            raise ValueError(f"--group {name!r} lists no samples")
+        groups[name.strip()] = parsed
+    return groups
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -328,16 +410,30 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     matrix = to_transcript_orientation(matrix, strand)
 
+    knockdown = None
+    if args.knockdown or args.event or args.group:
+        missing = [name for name in ("knockdown", "event", "group") if not getattr(args, name)]
+        if missing:
+            parser.error("--{} required to draw panel B".format(", --".join(missing)))
+        from deepmex.knockdown import read_vast_tools  # noqa: PLC0415
+
+        try:
+            knockdown = read_vast_tools(args.knockdown, args.event, parse_groups(args.group))
+        except (ValueError, OSError) as error:
+            parser.error(str(error))
+
     if args.tsv:
         write_tsv(args.tsv, matrix, chrom, start, end, strand)
         print(f"scores written to {args.tsv}")
 
-    figure = plot_position_scores(
+    figure = plot_figure(
         matrix,
         chrom,
         start,
         end,
         strand,
+        knockdown=knockdown,
+        knockdown_title=args.knockdown_title,
         gene=args.gene,
         vmax=args.vmax,
         gap=args.gap,

@@ -73,6 +73,31 @@ plotted as a 4 x 200 heatmap.
  - dpi: output resolution. Default: 300
  - demo: render the layout with synthetic scores, without model or reference files
 
+Panel B (inclusion of the microexon under a knock-down) is drawn from a
+vast-tools table, not from the model. Give all three and the output becomes the
+two panel figure:
+
+ - knockdown: an `INCLUSION_LEVELS_FULL` table
+ - event: the vast-tools event id, i.e. HsaEX0019952
+ - group: `NAME=SAMPLE,SAMPLE`, passed twice, the treated group first
+ - knockdown-title: title of panel B, i.e. "PTBP1 knock-down in HepG2 cells"
+
+The densities are the Beta posteriors of the inclusion level built from the
+corrected read counts of the quality column (`...@inclusion,exclusion`), and
+the right hand curve is P(|dPSI| > x) with the dashed line at the largest
+difference supported at 95%, the `MV[dPsi]` of vast-tools.
+
+```
+uv run positionscore --model src/saved_model.hdf5 --genome src/data/hg38.fa \
+  --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:- --gene DMD \
+  --knockdown INCLUSION_LEVELS_FULL.tab --event HsaEX0019952 \
+  --group shRNA=HepG2_sh1,HepG2_sh2 --group Control=HepG2_ctl1,HepG2_ctl2 \
+  --knockdown-title "PTBP1 knock-down in HepG2 cells" --output Fig7AB.tif
+```
+
+Panel C of the published figure is a UCSC browser screenshot and is not
+produced here.
+
 ### Sample command
 
 ```
@@ -112,7 +137,8 @@ The package lives in `src/deepmex/`:
 
  - `core.py`: reference file access, one hot encoding and the `Microexon` scoring
  - `cli.py`: the `deepmex` command line
- - `positionscore.py`: the mutational screening and the `positionscore` command line
+ - `positionscore.py`: the mutational screening, the figure composition and the `positionscore` command line
+ - `knockdown.py`: panel B, from a vast-tools table
  - `gtf.py`: exon tables from a GTF annotation (extra `gtf`)
  - `conservation.py`: per base conservation of the flanks, for training set preparation (extra `gtf`)
 
