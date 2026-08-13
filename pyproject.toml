@@ -32,6 +32,7 @@ gtf = [
 [project.scripts]
 deepmex = "deepmex.cli:main"
 positionscore = "deepmex.positionscore:main"
+deepmex-figure = "deepmex.figure:main"
 
 [dependency-groups]
 dev = [

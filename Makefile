@@ -1,4 +1,4 @@
-.PHONY: install install-model download-data run-example run-positionscore-example positionscore-demo test lint format
+.PHONY: install install-model download-data run-example run-positionscore-example figure-example positionscore-demo test lint format
 
 # Demo + tests environment (Python 3.15, see .python-version).
 install:
@@ -17,6 +17,9 @@ run-example:
 
 run-positionscore-example:
 	uv run positionscore --model src/saved_model.hdf5 --genome src/data/hg38.fa --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:- --gene DMD --panel-label A --output DMD_positionscore.tif
+
+figure-example:
+	uv run deepmex-figure chrX:31126642-31126673
 
 positionscore-demo:
 	uv run positionscore --exon chrX:31126642:31126673:- --gene DMD --demo --panel-label A --output demo_positionscore.png

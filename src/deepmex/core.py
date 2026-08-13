@@ -16,8 +16,11 @@ FLANK_SIZE = 100
 
 type Strand = Literal["+", "-"]
 
-#: chrom, start, end and strand, as in ``chr1:100020:100030:+``.
+#: Colon separated fields of a coordinate: ``chrom:start:end:strand`` has four,
+#: ``chrom:start-end:strand`` three and ``chrom:start-end`` two.
 COORDINATE_FIELDS = 4
+COORDINATE_FIELDS_WITH_STRAND = 3
+COORDINATE_FIELDS_BARE = 2
 
 #: One hot encoding used when the model was trained (see the training notebook).
 BASE_ENCODING: dict[str, tuple[int, int, int, int]] = {
@@ -95,18 +98,59 @@ def encode_sequence(sequence: Iterable[str]) -> np.ndarray:
     return np.asarray(encoded, dtype=np.float32)
 
 
-def parse_exon(exon: str) -> tuple[str, int, int, Strand]:
-    """Parse a ``chr1:100020:100030:+`` coordinate."""
-    fields = exon.split(":")
-    if len(fields) != COORDINATE_FIELDS:
-        raise ValueError(f"exon must look like chr1:100020:100030:+, got {exon!r}")
-    chrom, start, end, strand = fields
-    if strand not in ("+", "-"):
+def flank_intervals(start: int, end: int) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Half open intervals of the two flanks of an exon, in genomic order.
+
+    Single source of truth for the flank arithmetic: everything that reads a
+    flank goes through here, so the reference files, the UCSC API and the
+    position table can never drift apart.
+    """
+    upstream = (start - 1 - FLANK_SIZE, start - 1)
+    downstream = (end + 1, end + 1 + FLANK_SIZE)
+    return upstream, downstream
+
+
+def parse_coordinate(text: str) -> tuple[str, int, int, Strand | None]:
+    """Parse an exon coordinate, with or without the strand.
+
+    Accepts ``chrX:31126642-31126673``, ``chrX:31126642-31126673:-`` and the
+    older ``chrX:31126642:31126673:-``. The strand is ``None`` when absent.
+    """
+    fields = text.split(":")
+    strand: str | None = None
+    if len(fields) == COORDINATE_FIELDS_BARE:
+        chrom, span = fields
+    elif len(fields) == COORDINATE_FIELDS_WITH_STRAND and "-" in fields[1]:
+        chrom, span, strand = fields
+    elif len(fields) == COORDINATE_FIELDS_WITH_STRAND:
+        chrom, first, second = fields
+        span = f"{first}-{second}"
+    elif len(fields) == COORDINATE_FIELDS:
+        chrom, first, second, strand = fields
+        span = f"{first}-{second}"
+    else:
+        raise ValueError(f"coordinate must look like chrX:31126642-31126673, got {text!r}")
+
+    if strand is not None and strand not in ("+", "-"):
         raise ValueError(f"strand must be '+' or '-', got {strand!r}")
+    bounds = span.split("-")
+    if len(bounds) != COORDINATE_FIELDS_BARE:
+        raise ValueError(f"coordinate must look like chrX:31126642-31126673, got {text!r}")
     try:
-        return chrom, int(start), int(end), strand
+        start, end = int(bounds[0]), int(bounds[1])
     except ValueError as error:
-        raise ValueError(f"start and end must be integers, got {exon!r}") from error
+        raise ValueError(f"start and end must be integers, got {text!r}") from error
+    if end < start:
+        raise ValueError(f"end must not be before start, got {text!r}")
+    return chrom, start, end, strand
+
+
+def parse_exon(exon: str) -> tuple[str, int, int, Strand]:
+    """Parse a coordinate that must carry the strand."""
+    chrom, start, end, strand = parse_coordinate(exon)
+    if strand is None:
+        raise ValueError(f"exon must carry the strand, i.e. chrX:31126642-31126673:-, got {exon!r}")
+    return chrom, start, end, strand
 
 
 @dataclass(slots=True)
@@ -142,8 +186,7 @@ class Microexon:
         references: ReferenceFiles,
     ) -> Self:
         """Read the flank features of an exon from the genome and the bigwig."""
-        upstream = (start - 1 - FLANK_SIZE, start - 1)
-        downstream = (end + 1, end + 1 + FLANK_SIZE)
+        upstream, downstream = flank_intervals(start, end)
         return cls(
             chrom=chrom,
             start=start,

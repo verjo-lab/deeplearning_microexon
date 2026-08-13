@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from deepmex.core import FLANK_SIZE, Microexon
+from deepmex.impact import impact_table
 from deepmex.positionscore import (
     MUTATION_BASES,
     MUTATION_VECTORS,
@@ -177,3 +178,45 @@ def test_tsv_positions(tmp_path):
     assert lines[101].split("\t")[4] == "1"
     assert lines[200].split("\t")[4] == "100"
     assert lines[1].split("\t")[6:] == ["0", "1", "2", "3"]
+
+
+def test_impact_table_zeroes_the_wild_type():
+    """The reference base of a position must be the one scoring exactly 0."""
+    for strand in ("+", "-"):
+        microexon, _, _ = make_microexon(strand)
+        model = StandInModel()
+        matrix, _ = position_score_matrix(microexon, model)
+        matrix = to_transcript_orientation(matrix, strand)
+
+        table = impact_table(matrix, microexon)
+
+        assert len(table) == 2 * FLANK_SIZE
+        for entry in table:
+            assert entry.deltas[entry.wild_type] == 0.0, (strand, entry)
+
+
+def test_impact_table_reports_genomic_positions():
+    microexon, _, _ = make_microexon("+")
+    model = StandInModel()
+    matrix, _ = position_score_matrix(microexon, model)
+
+    table = impact_table(to_transcript_orientation(matrix, "+"), microexon)
+    by_relative = {entry.relative_position: entry for entry in table}
+
+    # The flanks sit immediately outside the exon, in genomic order.
+    assert by_relative[-1].genomic_position == microexon.start - 1
+    assert by_relative[-100].genomic_position == microexon.start - 100
+    assert by_relative[1].genomic_position == microexon.end + 2
+    assert by_relative[100].genomic_position == microexon.end + 101
+
+
+def test_impact_table_is_sorted_and_ranked_by_impact():
+    microexon, _, _ = make_microexon("-")
+    model = StandInModel()
+    matrix, _ = position_score_matrix(microexon, model)
+
+    table = impact_table(to_transcript_orientation(matrix, "-"), microexon)
+
+    impacts = [entry.impact for entry in table]
+    assert impacts == sorted(impacts, reverse=True)
+    assert table[0].impact == max(impacts)

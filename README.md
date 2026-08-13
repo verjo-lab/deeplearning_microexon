@@ -48,6 +48,47 @@ uv run deepmex --model src/saved_model.hdf5 --genome src/data/hg38.fa \
   --conservation src/data/hg38_cons.bw --exon chr1:100020:100030:+ > result.out
 ```
 
+## deepmex-figure: one command from a coordinate
+
+Give it a coordinate and it works out the rest: the strand and the gene name
+come from the RefSeq annotation, the flanks from the UCSC API, so neither the
+reference files nor `bedtools` are needed.
+
+```
+uv run deepmex-figure chrX:31126642-31126673
+```
+
+```
+RefSeq: strand -, gene DMD (16 transcripts)
+DMD chrX:31126642-31126673 (-, 32 nt)
+Microexon prediction: 76.124
+
+most impactful flank bases (of 200):
+  #      position    rel  wt    impact   deltas
+-----------------------------------------------
+  1      31126694    -20   T     1.566   A-0.81  C-1.05  G-1.57
+  2      31126690    -16   T     1.395   A-0.98  C-1.07  G-1.40
+  ...
+figure written to DMD_chrX_31126642_31126673.png
+ranking written to DMD_chrX_31126642_31126673_impact.tsv
+```
+
+It writes two files: the figure, and a table of every flank base ranked by how
+much the model reacts to mutating it. Each row carries the genomic position,
+the position relative to the exon, the reference base and the delta of each of
+the three substitutions; `impact` is the largest absolute delta. In the run
+above the top positions are the thymines of the polypyrimidine tract, 14 to 22
+nt upstream of the exon.
+
+Useful options:
+
+ - `--strand`/`--gene`: override what RefSeq says
+ - `--genome`/`--conservation`: read the flanks from local files instead of the API
+ - `--output`: the extension picks the format (png, pdf, svg, tif)
+ - `--table`: where the ranking goes
+ - `--top`: how many rows are printed (`--top 0` prints none)
+ - `--knockdown`/`--event`/`--group`: add panel B, see below
+
 ## PositionScore: mutational screening figure
 
 `positionscore` runs the synthetic mutational screening of the training
@@ -138,7 +179,10 @@ The package lives in `src/deepmex/`:
  - `core.py`: reference file access, one hot encoding and the `Microexon` scoring
  - `cli.py`: the `deepmex` command line
  - `positionscore.py`: the mutational screening, the figure composition and the `positionscore` command line
+ - `figure.py`: the `deepmex-figure` command line
+ - `impact.py`: the flank bases ranked by impact
  - `knockdown.py`: panel B, from a vast-tools table
+ - `ucsc.py`: sequence, conservation and annotation from the UCSC API
  - `gtf.py`: exon tables from a GTF annotation (extra `gtf`)
  - `conservation.py`: per base conservation of the flanks, for training set preparation (extra `gtf`)
 
