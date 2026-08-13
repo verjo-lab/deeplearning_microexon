@@ -58,10 +58,10 @@ plotted as a 4 x 200 heatmap.
 
 ### Parameters
 
- - exon (required): the microexon coordinate, i.e.: chrX:31126642:31126673:+
+ - exon (required): the microexon coordinate, i.e.: chrX:31126642:31126673:-
  - model, genome, conservation: the same files used by `deepmex`
  - gene: gene name printed in the title, i.e.: DMD
- - output: output figure, the extension picks the format (png, pdf, svg, tif). Default: positionscore.png
+ - output: output figure, the extension picks the format (png, pdf, svg, tif; tif is LZW compressed). Default: positionscore.png
  - tsv: also write the per position / per base scores to a tab separated file
  - vmax: color scale limit, the scale runs from -vmax to +vmax. Default: 1.5
    (the published figure uses 0.015 on the 0-1 scale of the notebook; the scores
@@ -77,23 +77,28 @@ plotted as a 4 x 200 heatmap.
 
 ```
 uv run positionscore --model src/saved_model.hdf5 --genome src/data/hg38.fa \
-  --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:+ \
-  --gene DMD --panel-label A --output DMD_positionscore.png --tsv DMD_positionscore.tsv
+  --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:- \
+  --gene DMD --panel-label A --output DMD_positionscore.tif --tsv DMD_positionscore.tsv
 ```
 
 To check the figure layout without downloading the reference files (only numpy
 and matplotlib are needed):
 
 ```
-uv run positionscore --exon chrX:31126642:31126673:+ --gene DMD --demo --output demo.png
+uv run positionscore --exon chrX:31126642:31126673:- --gene DMD --demo --output demo.png
 ```
 
 The screening scores 800 variants (200 positions x 4 bases) in batches, so a
 single microexon takes one model load plus a few seconds of prediction.
 
-Minus strand exons are drawn in transcript orientation (column 0 is always
--100 relative to the exon), following the same flank handling `deepmex`
-applies when it scores a minus strand microexon.
+Minus strand exons are drawn in transcript orientation: the position axis is
+reversed *and* the bases are complemented, so column 0 is always -100 relative
+to the exon and a row labelled `A` is the mutation to A of the transcript.
+This reproduces the published panel (DMD is on the minus strand, so pass
+`chrX:31126642:31126673:-`).
+
+`--output` picks the format from the extension; `.tif` is written with lossless
+LZW compression, which takes a 300 dpi panel from ~20 MB down to ~2 MB.
 
 ## Development
 

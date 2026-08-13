@@ -51,6 +51,10 @@ MUTATION_VECTORS = np.array(
     ]
 )
 
+#: Watson-Crick complement, used to draw minus strand exons in transcript
+#: orientation.
+COMPLEMENT = {"A": "T", "C": "G", "T": "A", "G": "C"}
+
 # Row order of the published figure, top to bottom.
 FIGURE_BASE_ORDER = "TGAC"
 
@@ -103,14 +107,18 @@ def position_score_matrix(
 
 
 def to_transcript_orientation(matrix: np.ndarray, strand: Strand) -> np.ndarray:
-    """Flip the flanks so that column 0 is always -100 relative to the exon.
+    """Reverse complement the screening so the figure reads 5' to 3'.
 
-    Mirrors what :meth:`Microexon.predict_batch` does for minus strand exons:
-    the position axis is reversed, the bases are not complemented.
+    On the minus strand the transcript runs against the genome, so the
+    position axis is reversed and every base is replaced by its complement:
+    column 0 is always -100 relative to the exon, and a row labelled ``A`` is
+    the mutation to A *of the transcript*, which is a mutation to T of the
+    genome. This is the orientation of the published figure.
     """
-    if strand == "-":
-        return matrix[::-1]
-    return matrix
+    if strand == "+":
+        return matrix
+    complement = [MUTATION_BASES.index(COMPLEMENT[base]) for base in MUTATION_BASES]
+    return matrix[::-1][:, complement]
 
 
 def build_plot_matrix(
@@ -337,7 +345,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         panel_label=args.panel_label,
         subtitle=subtitle,
     )
-    figure.savefig(args.output, dpi=args.dpi)
+    # An uncompressed 300 dpi TIFF of this panel is ~20 MB; LZW is lossless
+    # and is what journals expect.
+    save_kwargs = {}
+    if args.output.suffix.lower() in (".tif", ".tiff"):
+        save_kwargs["pil_kwargs"] = {"compression": "tiff_lzw"}
+    figure.savefig(args.output, dpi=args.dpi, **save_kwargs)
     print(f"figure written to {args.output}")
     return 0
 

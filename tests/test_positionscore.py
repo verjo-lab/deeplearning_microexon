@@ -136,7 +136,19 @@ def test_screening_matches_position_by_position_loop():
 def test_transcript_orientation():
     matrix = np.arange(800).reshape(200, 4).astype(float)
     assert np.array_equal(to_transcript_orientation(matrix, "+"), matrix)
-    assert np.array_equal(to_transcript_orientation(matrix, "-"), matrix[::-1])
+
+
+def test_transcript_orientation_reverse_complements_the_minus_strand():
+    """The row labelled A must carry the mutation to T of the genome."""
+    matrix = np.arange(800).reshape(200, 4).astype(float)
+
+    flipped = to_transcript_orientation(matrix, "-")
+
+    for base, complement in (("A", "T"), ("C", "G"), ("T", "A"), ("G", "C")):
+        assert np.array_equal(
+            flipped[:, MUTATION_BASES.index(base)],
+            matrix[::-1, MUTATION_BASES.index(complement)],
+        )
 
 
 def test_plot_matrix_layout():

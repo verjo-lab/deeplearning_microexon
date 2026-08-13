@@ -16,10 +16,10 @@ run-example:
 	uv run deepmex --model src/saved_model.hdf5 --genome src/data/hg38.fa --conservation src/data/hg38_cons.bw --exon chr1:100020:100030:+
 
 run-positionscore-example:
-	uv run positionscore --model src/saved_model.hdf5 --genome src/data/hg38.fa --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:+ --gene DMD --panel-label A --output DMD_positionscore.png
+	uv run positionscore --model src/saved_model.hdf5 --genome src/data/hg38.fa --conservation src/data/hg38_cons.bw --exon chrX:31126642:31126673:- --gene DMD --panel-label A --output DMD_positionscore.tif
 
 positionscore-demo:
-	uv run positionscore --exon chrX:31126642:31126673:+ --gene DMD --demo --panel-label A --output demo_positionscore.png
+	uv run positionscore --exon chrX:31126642:31126673:- --gene DMD --demo --panel-label A --output demo_positionscore.png
 
 test:
 	uv run pytest
